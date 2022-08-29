@@ -1,0 +1,194 @@
+<!doctypehtml>
+    <html lang="en">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload OTA data</title>
+    <style type="text/css">
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+
+            font-family: Roboto, sans-serif;
+            text-align: center;
+            min-width: 360px
+        }
+
+        .button-send {
+            width: 100%;
+            display: inline-block;
+            padding: 5px 55px;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            outline: 0;
+            color: #fff;
+            background-color: #018a0c;
+            border-radius: 15px;
+        }
+
+        .button-send:hover {
+            background-color: #5a1003
+        }
+
+        .button-send:active {
+            background-color: #018a0c;
+            box-shadow: 1px 1px #666;
+            transform: translateY(4px)
+        }
+
+        .button-send:disabled {
+            background-color: #9c9c9c;
+            box-shadow: 1px 1px #666;
+            transform: translateY(4px)
+        }
+
+        .container {
+            padding-top: 1px;
+            display: flex;
+            justify-content: center
+        }
+
+        .form-container {
+            min-width: 380px
+        }
+
+        .progress {
+            width: 100%;
+            height: 8px;
+            background: #535553;
+            ;
+            border-radius: 4px;
+            overflow: hidden
+        }
+
+        .progress .progress-bar {
+            display: block;
+            height: 100%;
+            background: linear-gradient(90deg, #ffd33d, #ea4aaa 17%, #b34bff 34%, #01feff 51%, #ffd33d 68%, #ea4aaa 85%, #b34bff);
+            background-size: 300% 100%;
+            -webkit-animation: progress-animation 2s linear infinite;
+            animation: progress-animation 2s linear infinite
+        }
+
+        .input-file {
+            width: 100%;
+            border: 0 transparent;
+            padding: 4px 4px 4px 4px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            border-radius: 7px;
+            background-color: rgb(1, 138, 12);
+        }
+
+        .additional-info {
+            height: 67px
+        }
+
+        @-webkit-keyframes progress-animation {
+            0% {
+                background-position: 100%
+            }
+
+            100% {
+                background-position: 0
+            }
+        }
+
+        @keyframes progress-animation {
+            0% {
+                background-position: 100%
+            }
+
+            100% {
+                background-position: 0
+            }
+        }
+
+        .tile-container {
+            display: flex;
+            justify-content: center
+        }
+
+        .footer-desc {
+            position: fixed;
+            display: flex;
+            bottom: 20px;
+            right: 20px;
+            align-items: center
+        }
+
+        .footer-link {
+            font-size: x-small;
+            color: #000;
+            text-decoration: none;
+            padding-left: 10px
+        }
+
+        .button-o {
+            display: inline-block;
+            padding: 5px 55px;
+            cursor: pointer;
+            font-size: 16px;
+            background: 0 0;
+            text-align: center;
+            outline: 0;
+            border: 1px solid rgba(0, 0, 0, .35);
+            width: 50%;
+            background-color: #018a0c
+        }
+
+        .button-o.selected {
+            background-color: #5a1003;
+            color: #fff
+        }
+
+        .button-o.left {
+            border-radius: 14px 0 0 14px;
+            margin-right: -3px
+        }
+
+        .button-o.right {
+            border-radius: 0 14px 14px 0;
+            margin-left: -3px
+        }
+
+        #overlay {
+            position: fixed;
+            display: none;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, .06);
+            z-index: 2;
+            cursor: pointer
+        }
+    </style>
+    <div id="overlay"></div>
+    <!--div class="tile-container">
+        <h1>OTA Update</h1>
+    </div-->
+    <h1>
+        <p>OTA Update</p>
+    </h1>
+    <div class="container">
+
+        <form enctype="multipart/form-data" class="form-container" id="upload_form" method="post">
+            <div id="switch-container"><button class="button-o left selected" id="firmware-button"
+                    type="button">Firmware</button> <button class="button-o right" id="filesystem-button"
+                    type="button">FileSystem</button></div><input accept=".bin,.bin.gz" class="input-file" id="file1"
+                name="firmware" type="file"><br>
+            <div class="progress"><span class="progress-bar" id="progressBar" style="width:0%"></span></div>
+            <div class="additional-info">
+                <h3 id="status">Firmware upload</h3>
+                <p id="loaded_n_total">
+            </div>
+            <hr><button id="button-send" class="button-send" type="submit" disabled="disabled">Upload</button>
+        </form>
+        <script>function stringToBoolean(e) { switch (e.toLowerCase().trim()) { case "true": case "yes": case "1": return !0; case "false": case "no": case "0": case null: return !1; default: return Boolean(e) } } const urlParams = new URLSearchParams(window.location.search), onlyFirmware = urlParams.get("onlyFirmware"); function disableAll() { document.getElementById("overlay").style.display = "block" } function enableAll() { document.getElementById("overlay").style.display = "none" } function _(e) { return document.getElementById(e) } function uploadFile() { var e = _("file1").files[0], t = new FormData; t.append(_("file1").name, e, e.name); e = new XMLHttpRequest; e.upload.addEventListener("progress", progressHandler, !1), e.addEventListener("load", completeHandler, !1), e.addEventListener("loadstart", startHandler, !1), e.addEventListener("error", errorHandler, !1), e.addEventListener("abort", abortHandler, !1), e.open("POST", "/update"), e.setRequestHeader("Access-Control-Allow-Headers", "*"), e.setRequestHeader("Access-Control-Allow-Origin", "*"), e.send(t) } function progressHandler(e) { _("loaded_n_total").innerHTML = "Uploaded " + e.loaded + " bytes of " + e.total; e = Math.round(e.loaded / e.total * 100); _("progressBar").style = "width: " + e + "%", _("status").innerHTML = e + "% uploaded... please wait" } function completeHandler(e) { enableAll(), 0 <= e.target.responseText.indexOf("error") ? _("status").innerHTML = e.target.responseText : _("status").innerHTML = "Upload Success!", _("progressBar").value = 0 } function startHandler(e) { disableAll() } function errorHandler(e) { enableAll(), _("status").innerHTML = "Upload Failed" } function abortHandler(e) { enableAll(), _("status").innerHTML = "Upload Aborted" } onlyFirmware && !0 === stringToBoolean(onlyFirmware) && (_("switch-container").style.display = "none"), _("upload_form").addEventListener("submit", e => { e.preventDefault(), uploadFile() }), _("firmware-button").addEventListener("click", function (e) { e.target.classList.add("selected"), _("filesystem-button").classList.remove("selected"), _("file1").name = "firmware" }), _("filesystem-button").addEventListener("click", function (e) { e.target.classList.add("selected"), _("firmware-button").classList.remove("selected"), _("file1").name = "filesystem" }), _("file1").addEventListener("change", function (e) { var t = _("file1").files[0]; t && t.name ? _("button-send").disabled = !1 : _("button-send").disabled = !0, _("status").innerHTML = "Firmware Upload!", _("loaded_n_total").innerHTML = "" })</script>
+    </div>
